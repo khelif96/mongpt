@@ -1,0 +1,1 @@
+# monGPT is a CLI tool built to help you query MongoDB from the command line using natural language. It is built on top of the [GPT-3](https://openai.com/blog/openai-api/) API from OpenAI.
