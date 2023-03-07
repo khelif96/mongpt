@@ -11,6 +11,8 @@ import (
 	"github.com/khelif96/mongpt/operations"
 )
 
+const currentFileDirectory = "./"
+
 func main() {
 	db.Init()
 
@@ -38,6 +40,26 @@ func main() {
 					database := PromptForDatabase(databases)
 					operations.ClearTerminal()
 					fmt.Println("You chose database: ", database)
+					collections := db.GetCollections()
+					selectedCollections := PromptForCollectionsToSample(collections)
+					fmt.Println("You chose to sample the following collections: ", selectedCollections)
+
+					for _, collection := range selectedCollections {
+						fmt.Println("Sampling collection: ", collection)
+						sample, err := db.CollectDocumentSamplesFromCollection(collection)
+						if err != nil {
+							log.Fatal(err)
+						}
+						fmt.Println("Sample: ", sample)
+						schema := db.GetSchemaFromDocument(sample)
+						fmt.Println("Schema: ", schema)
+						fileName := currentFileDirectory + collection + ".json"
+						err = operations.WriteSchemaToFile(fileName, schema)
+						if err != nil {
+							log.Fatal(err)
+						}
+
+					}
 
 					return nil
 				},
