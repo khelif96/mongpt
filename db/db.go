@@ -95,3 +95,16 @@ func CollectDocumentSamplesFromCollection(collection string) (bson.M, error) {
 	fmt.Println(sample)
 	return sample, nil
 }
+
+func PerformAggregation(collection *mongo.Collection, pipeline []bson.M) (interface{}, error) {
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error performing aggregation")
+	}
+	fmt.Println(pipeline)
+	results := []struct{}{}
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, errors.Wrapf(err, "Error decoding aggregation results")
+	}
+	return results, nil
+}
