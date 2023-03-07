@@ -3,14 +3,18 @@ module github.com/khelif96/mongpt
 go 1.19
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/evergreen-ci/utility v0.0.0-20230216205613-b8156d58f1e5
+	github.com/joho/godotenv v1.5.1
+	github.com/manifoldco/promptui v0.9.0
+	github.com/pkg/errors v0.9.1
+	github.com/sashabaranov/go-openai v1.4.2
 	github.com/urfave/cli/v2 v2.25.0
 	go.mongodb.org/mongo-driver v1.11.2
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.6 // indirect
 	github.com/PuerkitoBio/rehttp v1.1.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
@@ -19,12 +23,10 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
