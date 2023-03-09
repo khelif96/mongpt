@@ -1,6 +1,8 @@
 package operations
 
-import "gopkg.in/mgo.v2/bson"
+import (
+	"gopkg.in/mgo.v2/bson"
+)
 
 func GetSchemaFromDocument(document bson.M) bson.M {
 	schema := bson.M{}

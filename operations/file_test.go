@@ -33,5 +33,3 @@ func TestWriteJSONSchemaToFile(t *testing.T) {
 	}
 
 }
-
-func 
