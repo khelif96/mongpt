@@ -39,3 +39,11 @@ func getSchemaFromList(list []interface{}) interface{} {
 	}
 	return schema
 }
+
+func FormatSchemas(schemas map[string]string) string {
+	formatted := ""
+	for name, schema := range schemas {
+		formatted += name + ": " + schema + "\n"
+	}
+	return formatted
+}

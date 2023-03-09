@@ -4,30 +4,29 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/evergreen-ci/utility"
 	"github.com/khelif96/mongpt/db"
-	"github.com/manifoldco/promptui"
 )
 
 func PromptForDatabase(databases []string) string {
-	var chosenDB *string
-	for chosenDB == nil {
-		prompt := promptui.Select{
-			Label: "Select Database",
-			Items: databases,
-		}
+	chosenDB := ""
 
-		_, result, err := prompt.Run()
-		if result != "" {
-			chosenDB = utility.ToStringPtr(result)
-		}
-		err = db.ChooseDatabase(utility.FromStringPtr(chosenDB))
-		if err != nil {
-			fmt.Println(err.Error())
-			chosenDB = nil
-		}
+	prompt := &survey.Select{
+		Message: "Select Database",
+		Options: databases,
+		Default: databases[0],
 	}
-	return utility.FromStringPtr(chosenDB)
+	err := survey.AskOne(prompt, &chosenDB)
+	if err != nil {
+		fmt.Printf("Prompt failed %v", err)
+		return ""
+	}
+	fmt.Println(chosenDB)
+
+	err = db.ChooseDatabase(chosenDB)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return chosenDB
 }
 
 func PromptForCollectionsToSample(collections []string) []string {
