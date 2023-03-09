@@ -44,7 +44,6 @@ func trainOnSchema(schemas string) ([]openai.ChatCompletionMessage, error) {
 			Content: schemaDefinitionPrompt + schemas,
 		},
 	}
-	fmt.Println(chatCompletionRequest[1].Content)
 	return chatCompletionRequest, nil
 }
 

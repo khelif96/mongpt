@@ -13,7 +13,6 @@ func WriteJSONSchemaToFile(filename string, data string) error {
 }
 
 func ReadJSONSchemaFromFile(filename string) string {
-	fmt.Println("Opening file: ", filename)
 	// Open the file
 	file, err := os.Open(filename)
 	if err != nil {
@@ -50,7 +49,6 @@ func ReadJSONSchemasFromDir(dir string) map[string]string {
 			continue
 		}
 		// Remove the .json extension
-		fmt.Println(dir + file.Name())
 		schemas[file.Name()[:len(file.Name())-5]] = ReadJSONSchemaFromFile(dir + file.Name())
 	}
 

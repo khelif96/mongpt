@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/khelif96/mongpt/db"
 )
 
 func PromptForDatabase(databases []string) string {
@@ -21,11 +20,6 @@ func PromptForDatabase(databases []string) string {
 			fmt.Printf("Prompt failed %v", err)
 			return ""
 		}
-	}
-
-	err := db.ChooseDatabase(chosenDB)
-	if err != nil {
-		fmt.Println(err.Error())
 	}
 	return chosenDB
 }

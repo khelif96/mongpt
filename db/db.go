@@ -50,8 +50,6 @@ func ChooseDatabase(name string) error {
 		return fmt.Errorf("No databases found! Did you call GetDatabases() first?")
 	}
 	if !utility.StringSliceContains(databases, name) {
-		fmt.Println(databases)
-		fmt.Println(name)
 		return fmt.Errorf("Database %s not found!", name)
 	}
 	database = client.Database(name)
@@ -93,7 +91,6 @@ func CollectDocumentSamplesFromCollection(collection string) (bson.M, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error getting sample from collection %s", collection)
 	}
-	fmt.Println(sample)
 	return sample, nil
 }
 

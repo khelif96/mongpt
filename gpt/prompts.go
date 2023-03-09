@@ -11,4 +11,4 @@ You should only return the below format nothing else should be in the response.
 
 const schemaDefinitionPrompt = "The schemas are defined as follows:"
 
-const responseFormatPrompt = `The response below is the answer to the question. Format the response in a human readable way.`
+const responseFormatPrompt = `The response below is the answer to the question in the form of a response from a mongodb query. Format the response in a human readable way.`

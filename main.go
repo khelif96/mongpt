@@ -42,12 +42,14 @@ func main() {
 						log.Fatal(err)
 					}
 
-					database := userInput.PromptForDatabase(databases)
-					// operations.ClearTerminal()
-					fmt.Println("You chose database: ", database)
+					chosenDB := userInput.PromptForDatabase(databases)
+					err = db.ChooseDatabase(chosenDB)
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+
 					collections := db.GetCollections()
 					selectedCollections := userInput.PromptForCollectionToSample(collections)
-					fmt.Println("You chose to sample the following collections: ", selectedCollections)
 
 					for _, collection := range selectedCollections {
 						fmt.Println("Sampling collection: ", collection)
@@ -55,9 +57,11 @@ func main() {
 						if err != nil {
 							log.Fatal(err)
 						}
+
 						schema := operations.GetSchemaFromDocument(sample)
 						fileName := cacheDirectory + collection + ".json"
 						jsonSchema := operations.ConvertBSONToJSON(schema)
+						fmt.Println(fmt.Sprintf("The document schema is as follows: %s", jsonSchema))
 						err = operations.WriteJSONSchemaToFile(fileName, jsonSchema)
 						if err != nil {
 							log.Fatal(err)
@@ -75,7 +79,6 @@ func main() {
 						log.Fatal(err)
 					}
 
-					fmt.Println("Response: ", utility.FromStringPtr(response))
 					operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
 					type ChatGPTResponse struct {
 						Query       []bson.M `json:"query"`
@@ -96,7 +99,6 @@ func main() {
 					if err != nil {
 						log.Fatal(err)
 					}
-					fmt.Println("Results: ", results)
 					response, err = gpt.AskGPTToReadResponse(operations.ConvertBSONArrayToJSON(results))
 					if err != nil {
 						log.Fatal(err)
