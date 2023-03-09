@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/evergreen-ci/utility"
 	"github.com/pkg/errors"
@@ -20,7 +21,7 @@ var ctx = context.TODO()
 
 func Init() {
 	fmt.Println("Connecting to MongoDB...")
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/")
+	clientOptions := options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING"))
 	var err error
 	client, err = mongo.Connect(ctx, clientOptions)
 	if err != nil {
@@ -96,13 +97,12 @@ func CollectDocumentSamplesFromCollection(collection string) (bson.M, error) {
 	return sample, nil
 }
 
-func PerformAggregation(collection *mongo.Collection, pipeline []bson.M) (interface{}, error) {
+func PerformAggregation(collection *mongo.Collection, pipeline []bson.M) ([]bson.M, error) {
 	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error performing aggregation")
 	}
-	fmt.Println(pipeline)
-	results := []struct{}{}
+	results := []bson.M{}
 	if err = cursor.All(ctx, &results); err != nil {
 		return nil, errors.Wrapf(err, "Error decoding aggregation results")
 	}

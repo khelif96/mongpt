@@ -23,12 +23,15 @@ func ReadJSONSchemaFromFile(filename string) string {
 	// Read the file
 	data := ""
 	decoder := json.NewDecoder(file)
-	decoder.Decode(&data)
-	err = file.Close()
-	if err != nil {
-		panic(err)
+	for decoder.More() {
+		var v interface{}
+		err := decoder.Decode(&v)
+		if err != nil {
+			panic(err)
+		}
+		data += fmt.Sprintf("%v", v)
 	}
-	fmt.Println("Read data: ", data)
+
 	return data
 }
 
@@ -47,6 +50,7 @@ func ReadJSONSchemasFromDir(dir string) map[string]string {
 			continue
 		}
 		// Remove the .json extension
+		fmt.Println(dir + file.Name())
 		schemas[file.Name()[:len(file.Name())-5]] = ReadJSONSchemaFromFile(dir + file.Name())
 	}
 

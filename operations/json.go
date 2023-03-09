@@ -23,3 +23,9 @@ func ConvertBSONToJSON(bson bson.M) string {
 	return string(json)
 
 }
+
+func ConvertBSONArrayToJSON(bson []bson.M) string {
+	json, _ := json.MarshalIndent(bson, "", " ")
+	return string(json)
+
+}

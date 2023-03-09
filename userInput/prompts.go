@@ -15,14 +15,15 @@ func PromptForDatabase(databases []string) string {
 		Options: databases,
 		Default: databases[0],
 	}
-	err := survey.AskOne(prompt, &chosenDB)
-	if err != nil {
-		fmt.Printf("Prompt failed %v", err)
-		return ""
+	for chosenDB == "" {
+		err := survey.AskOne(prompt, &chosenDB)
+		if err != nil {
+			fmt.Printf("Prompt failed %v", err)
+			return ""
+		}
 	}
-	fmt.Println(chosenDB)
 
-	err = db.ChooseDatabase(chosenDB)
+	err := db.ChooseDatabase(chosenDB)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -63,6 +64,27 @@ func PromptForCollectionsToSample(collections []string) []string {
 	return collectionsToSample
 }
 
+// PromptForCollectionToSample prompts the user to select a collection to sample
+// This only returns one collection in a slice to make it convenient to swap out with
+// PromptForCollectionsToSample
+func PromptForCollectionToSample(collections []string) []string {
+	collectionToSample := ""
+	collectionPrompt := &survey.Select{
+		Message: "Select Collection to Sample",
+		Options: collections,
+	}
+	for len(collectionToSample) == 0 {
+		err := survey.AskOne(collectionPrompt, &collectionToSample)
+		if err != nil {
+			fmt.Printf("Prompt failed %v", err)
+			return nil
+		}
+		if len(collectionToSample) == 0 {
+			fmt.Println("You must select a collection to sample!")
+		}
+	}
+	return []string{collectionToSample}
+}
 func PromptForAllowingExpensiveQueries(errorMessage string) bool {
 	allowExpensiveQueries := false
 	expensiveQueryPrompt := &survey.Confirm{

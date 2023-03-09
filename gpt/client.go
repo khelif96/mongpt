@@ -71,8 +71,48 @@ func AskGPT(schemas, prompt string) (*string, error) {
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model:    openai.GPT3Dot5Turbo,
-			Messages: fullPrompt,
+			Model:       openai.GPT3Dot5Turbo,
+			Messages:    fullPrompt,
+			Temperature: 0.2,
+		},
+	)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error creating chat completion")
+	}
+
+	log.Println(fmt.Sprintf("Response Cost: %d, $%f", resp.Usage.TotalTokens, calculateGPT3Cost(resp.Usage.TotalTokens)))
+
+	return &resp.Choices[0].Message.Content, nil
+}
+
+func AskGPTToReadResponse(response string) (*string, error) {
+	if client == nil {
+		panic("Client is nil! Did you call Init() first?")
+	}
+	promptTokenUsage := calculateTokenUsage(responseFormatPrompt + response)
+	if promptTokenUsage > promptThreshold {
+		errorMessage := fmt.Sprintf("Prompt cost %d exceeds threshold %d\n It will cost approximately $%f to run.", promptTokenUsage, promptThreshold, calculateGPT3Cost(promptTokenUsage))
+		if !userInput.PromptForAllowingExpensiveQueries(errorMessage) {
+			return nil, fmt.Errorf(errorMessage)
+		}
+	}
+
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT3Dot5Turbo,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: responseFormatPrompt,
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: response,
+				},
+			},
+			Temperature: 0.2,
 		},
 	)
 

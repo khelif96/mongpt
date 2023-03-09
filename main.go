@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/evergreen-ci/utility"
 	"github.com/urfave/cli/v2" // imports as package "cli"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/khelif96/mongpt/db"
 	"github.com/khelif96/mongpt/gpt"
@@ -44,7 +46,7 @@ func main() {
 					// operations.ClearTerminal()
 					fmt.Println("You chose database: ", database)
 					collections := db.GetCollections()
-					selectedCollections := userInput.PromptForCollectionsToSample(collections)
+					selectedCollections := userInput.PromptForCollectionToSample(collections)
 					fmt.Println("You chose to sample the following collections: ", selectedCollections)
 
 					for _, collection := range selectedCollections {
@@ -73,6 +75,32 @@ func main() {
 						log.Fatal(err)
 					}
 
+					fmt.Println("Response: ", utility.FromStringPtr(response))
+					operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
+					type ChatGPTResponse struct {
+						Query       []bson.M `json:"query"`
+						Explanation string   `json:"explanation"`
+					}
+					// Turn the response into a ChatGPTResponse
+					chatResponse := ChatGPTResponse{}
+					err = json.Unmarshal([]byte(utility.FromStringPtr(response)), &chatResponse)
+					if err != nil {
+						log.Fatal(err)
+					}
+					collection, err := db.ChooseCollection(selectedCollections[0])
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					results, err := db.PerformAggregation(collection, chatResponse.Query)
+					if err != nil {
+						log.Fatal(err)
+					}
+					fmt.Println("Results: ", results)
+					response, err = gpt.AskGPTToReadResponse(operations.ConvertBSONArrayToJSON(results))
+					if err != nil {
+						log.Fatal(err)
+					}
 					fmt.Println("Response: ", utility.FromStringPtr(response))
 					return nil
 				},
