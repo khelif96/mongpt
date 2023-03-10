@@ -71,54 +71,11 @@ func main() {
 					if (len(schemas)) == 0 {
 						log.Fatal("No schemas found in cache directory")
 					}
-
-					query := userInput.PromptForQuery()
-
-					retries := 0
-					chatResponse := gpt.ChatGPTResponse{}
-
-					for true {
-						response, err := gpt.AskGPT(operations.FormatSchemas(schemas), query)
-						if err != nil {
-							log.Fatal(err)
-						}
-
-						pattern := regexp.MustCompile("(?s)```(.+?)```")
-						// Use the regexp package to search for the pattern in the string
-						match := pattern.FindStringSubmatch(utility.FromStringPtr(response))
-						if len(match) > 1 {
-							response = utility.ToStringPtr(match[1])
-						}
-						operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
-
-						// Turn the response into a ChatGPTResponse
-						err = json.Unmarshal([]byte(utility.FromStringPtr(response)), &chatResponse)
-						if err == nil {
-							break
-						}
-
-						fmt.Println("Failed to parse response from GPT-3, retrying...")
-						retries++
-						if retries == 3 {
-							log.Fatal("Failed to parse response from GPT-3")
-						}
+					for {
+						questionLoop(schemas, selectedCollections)
 					}
 
-					collection, err := db.ChooseCollection(selectedCollections[0])
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					results, err := db.PerformAggregation(collection, chatResponse.Query)
-					if err != nil {
-						log.Fatal(err)
-					}
-					response, err := gpt.AskGPTToReadResponse(operations.ConvertBSONArrayToJSON(results))
-					if err != nil {
-						log.Fatal(err)
-					}
-					fmt.Println("Response: ", utility.FromStringPtr(response))
-					return nil
+					// return nil
 				},
 			},
 		},
@@ -128,4 +85,53 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func questionLoop(schemas map[string]string, selectedCollections []string) {
+	query := userInput.PromptForQuery()
+
+	retries := 0
+	chatResponse := gpt.ChatGPTResponse{}
+
+	for true {
+		response, err := gpt.AskGPT(operations.FormatSchemas(schemas), query)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		pattern := regexp.MustCompile("(?s)```(.+?)```")
+		// Use the regexp package to search for the pattern in the string
+		match := pattern.FindStringSubmatch(utility.FromStringPtr(response))
+		if len(match) > 1 {
+			response = utility.ToStringPtr(match[1])
+		}
+		operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
+
+		// Turn the response into a ChatGPTResponse
+		err = json.Unmarshal([]byte(utility.FromStringPtr(response)), &chatResponse)
+		if err == nil {
+			break
+		}
+
+		fmt.Println("Failed to parse response from GPT-3, retrying...")
+		retries++
+		if retries == 3 {
+			log.Fatal("Failed to parse response from GPT-3")
+		}
+	}
+
+	collection, err := db.ChooseCollection(selectedCollections[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	results, err := db.PerformAggregation(collection, chatResponse.Query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	response, err := gpt.AskGPTToReadResponse(operations.ConvertBSONArrayToJSON(results))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Response: ", utility.FromStringPtr(response))
 }
