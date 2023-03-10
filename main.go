@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 
 	"github.com/evergreen-ci/utility"
 	"github.com/urfave/cli/v2" // imports as package "cli"
@@ -82,6 +83,12 @@ func main() {
 							log.Fatal(err)
 						}
 
+						pattern := regexp.MustCompile("(?s)```(.+?)```")
+						// Use the regexp package to search for the pattern in the string
+						match := pattern.FindStringSubmatch(utility.FromStringPtr(response))
+						if len(match) > 1 {
+							response = utility.ToStringPtr(match[1])
+						}
 						operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
 
 						// Turn the response into a ChatGPTResponse
@@ -89,6 +96,7 @@ func main() {
 						if err == nil {
 							break
 						}
+
 						fmt.Println("Failed to parse response from GPT-3, retrying...")
 						retries++
 						if retries == 3 {

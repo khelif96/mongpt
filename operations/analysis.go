@@ -16,9 +16,18 @@ func GetSchemaFromDocument(document bson.M) bson.M {
 
 func getTypeFromField(field interface{}) string {
 	v := reflect.ValueOf(field)
-	return v.Type().String()
+	switch v.Type().String() {
 
+	case "bson.M":
+		// Recursively get the schema
+		schema := GetSchemaFromDocument(field.(bson.M))
+		return ConvertBSONToJSON(schema)
+
+	default:
+		return v.Type().String()
+	}
 }
+
 func FormatSchemas(schemas map[string]string) string {
 	formatted := ""
 	for name, schema := range schemas {
