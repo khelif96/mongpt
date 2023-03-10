@@ -17,6 +17,9 @@ var client *openai.Client
 
 const promptThreshold = 1000
 
+// Keep track of the messages sent to the chatbot
+var pastMessages []openai.ChatCompletionMessage
+
 func Init() {
 	client = openai.NewClient(os.Getenv("OPENAI_KEY"))
 
@@ -55,7 +58,7 @@ func AskGPT(schemas, prompt string) (*string, error) {
 	if promptTokenUsage > promptThreshold {
 		errorMessage := fmt.Sprintf("Prompt cost %d exceeds threshold %d\n It will cost approximately $%f to run.", promptTokenUsage, promptThreshold, calculateGPT3Cost(promptTokenUsage))
 		if !userInput.PromptForAllowingExpensiveQueries(errorMessage) {
-			return nil, fmt.Errorf(errorMessage)
+			return nil, fmt.Errorf(fmt.Sprintf("Failed to run query: %s", prompt))
 		}
 	}
 
@@ -63,10 +66,11 @@ func AskGPT(schemas, prompt string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	fullPrompt := append(trainingPrompts, openai.ChatCompletionMessage{
+	pastMessages = append(pastMessages, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleUser,
 		Content: prompt,
 	})
+	fullPrompt := append(trainingPrompts, pastMessages...)
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
@@ -93,24 +97,26 @@ func AskGPTToReadResponse(response string) (*string, error) {
 	if promptTokenUsage > promptThreshold {
 		errorMessage := fmt.Sprintf("Prompt cost %d exceeds threshold %d\n It will cost approximately $%f to run.", promptTokenUsage, promptThreshold, calculateGPT3Cost(promptTokenUsage))
 		if !userInput.PromptForAllowingExpensiveQueries(errorMessage) {
-			return nil, fmt.Errorf(errorMessage)
+			return nil, fmt.Errorf(fmt.Sprintf("Failed to run query: %s", responseFormatPrompt+response))
 		}
 	}
 
+	messages := append(pastMessages, []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: responseFormatPrompt,
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: response,
+		},
+	}...,
+	)
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: responseFormatPrompt,
-				},
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: response,
-				},
-			},
+			Model:       openai.GPT3Dot5Turbo,
+			Messages:    messages,
 			Temperature: 0.2,
 		},
 	)
@@ -121,5 +127,10 @@ func AskGPTToReadResponse(response string) (*string, error) {
 
 	log.Println(fmt.Sprintf("Response Cost: %d, $%f", resp.Usage.TotalTokens, calculateGPT3Cost(resp.Usage.TotalTokens)))
 
+	pastMessages = append(pastMessages, messages...)
+	pastMessages = append(pastMessages, openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleAssistant,
+		Content: resp.Choices[0].Message.Content,
+	})
 	return &resp.Choices[0].Message.Content, nil
 }

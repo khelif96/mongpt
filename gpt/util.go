@@ -19,6 +19,5 @@ func calculateGPT3Cost(tokenCount int) float64 {
 }
 
 type ChatGPTResponse struct {
-	Query       []bson.M `json:"query"`
-	Explanation string   `json:"explanation"`
+	Query []bson.M `json:"query"`
 }

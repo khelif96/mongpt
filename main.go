@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 
 	"github.com/evergreen-ci/utility"
 	"github.com/urfave/cli/v2" // imports as package "cli"
@@ -93,31 +91,23 @@ func questionLoop(schemas map[string]string, selectedCollections []string) {
 	retries := 0
 	chatResponse := gpt.ChatGPTResponse{}
 
-	for true {
+	for retries < 3 {
 		response, err := gpt.AskGPT(operations.FormatSchemas(schemas), query)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		pattern := regexp.MustCompile("(?s)```(.+?)```")
-		// Use the regexp package to search for the pattern in the string
-		match := pattern.FindStringSubmatch(utility.FromStringPtr(response))
-		if len(match) > 1 {
-			response = utility.ToStringPtr(match[1])
+		fmt.Println(utility.FromStringPtr(response))
+		parsedResponse, err := operations.CleanGPTResponse(utility.FromStringPtr(response))
+		if err != nil {
+			fmt.Println("Failed to parse response from GPT-3, retrying...")
+			retries++
 		}
-		operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
-
-		// Turn the response into a ChatGPTResponse
-		err = json.Unmarshal([]byte(utility.FromStringPtr(response)), &chatResponse)
-		if err == nil {
-			break
-		}
-
-		fmt.Println("Failed to parse response from GPT-3, retrying...")
-		retries++
-		if retries == 3 {
-			log.Fatal("Failed to parse response from GPT-3")
-		}
+		operations.WriteJSONSchemaToFile("./bin/cache/response.json", operations.ConvertBSONArrayToJSON(parsedResponse))
+		chatResponse.Query = parsedResponse
+		break
+	}
+	if retries == 3 {
+		log.Fatal("Failed to parse response from GPT-3")
 	}
 
 	collection, err := db.ChooseCollection(selectedCollections[0])
