@@ -3,6 +3,8 @@ package gpt
 import (
 	"math"
 	"strings"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 func calculateTokenUsage(tokens ...string) int {
@@ -14,4 +16,9 @@ func calculateGPT3Cost(tokenCount int) float64 {
 	// gpt3 costs $0.002 per 1000 tokens
 	return float64(tokenCount) * 0.002 / 1000
 
+}
+
+type ChatGPTResponse struct {
+	Query       []bson.M `json:"query"`
+	Explanation string   `json:"explanation"`
 }

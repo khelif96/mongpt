@@ -8,7 +8,6 @@ import (
 
 	"github.com/evergreen-ci/utility"
 	"github.com/urfave/cli/v2" // imports as package "cli"
-	"gopkg.in/mgo.v2/bson"
 
 	"github.com/khelif96/mongpt/db"
 	"github.com/khelif96/mongpt/gpt"
@@ -74,22 +73,29 @@ func main() {
 
 					query := userInput.PromptForQuery()
 
-					response, err := gpt.AskGPT(operations.FormatSchemas(schemas), query)
-					if err != nil {
-						log.Fatal(err)
+					retries := 0
+					chatResponse := gpt.ChatGPTResponse{}
+
+					for true {
+						response, err := gpt.AskGPT(operations.FormatSchemas(schemas), query)
+						if err != nil {
+							log.Fatal(err)
+						}
+
+						operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
+
+						// Turn the response into a ChatGPTResponse
+						err = json.Unmarshal([]byte(utility.FromStringPtr(response)), &chatResponse)
+						if err == nil {
+							break
+						}
+						fmt.Println("Failed to parse response from GPT-3, retrying...")
+						retries++
+						if retries == 3 {
+							log.Fatal("Failed to parse response from GPT-3")
+						}
 					}
 
-					operations.WriteJSONSchemaToFile("./bin/cache/response.json", utility.FromStringPtr(response))
-					type ChatGPTResponse struct {
-						Query       []bson.M `json:"query"`
-						Explanation string   `json:"explanation"`
-					}
-					// Turn the response into a ChatGPTResponse
-					chatResponse := ChatGPTResponse{}
-					err = json.Unmarshal([]byte(utility.FromStringPtr(response)), &chatResponse)
-					if err != nil {
-						log.Fatal(err)
-					}
 					collection, err := db.ChooseCollection(selectedCollections[0])
 					if err != nil {
 						log.Fatal(err)
@@ -99,7 +105,7 @@ func main() {
 					if err != nil {
 						log.Fatal(err)
 					}
-					response, err = gpt.AskGPTToReadResponse(operations.ConvertBSONArrayToJSON(results))
+					response, err := gpt.AskGPTToReadResponse(operations.ConvertBSONArrayToJSON(results))
 					if err != nil {
 						log.Fatal(err)
 					}
