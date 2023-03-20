@@ -15,7 +15,6 @@ func CleanGPTResponse(response string) ([]bson.M, error) {
 	// Use the regexp package to search for the pattern in the string
 	match := backtickPattern.FindStringSubmatch(response)
 	if len(match) > 1 {
-		fmt.Println("Found backticks")
 		response = match[1]
 		// Sometimes chatgpt returns an array but without the brackets. This fixes that.
 		arrayPattern := regexp.MustCompile(`(?s)\[(.+?)\]`)
@@ -36,7 +35,6 @@ func CleanGPTResponse(response string) ([]bson.M, error) {
 		}
 		finalResponse = gptResponse.Query
 	}
-	fmt.Println(finalResponse)
 	if (len(finalResponse)) == 0 {
 		return nil, fmt.Errorf("No response found")
 	}

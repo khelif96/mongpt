@@ -12,3 +12,9 @@ You should only return the below format nothing else should be in the response. 
 const schemaDefinitionPrompt = "The schemas are defined as follows:"
 
 const responseFormatPrompt = `The response below is the answer to the question in the form of a response from a mongodb query. Format the response in a human readable way.`
+
+const scoldGPTPrompt = `You returned the wrong format for the response. Remember it must resemble the following format:
+{
+	"query": [],
+	"explanation": ""
+}`

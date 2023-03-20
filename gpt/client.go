@@ -50,7 +50,7 @@ func trainOnSchema(schemas string) ([]openai.ChatCompletionMessage, error) {
 	return chatCompletionRequest, nil
 }
 
-func AskGPT(schemas, prompt string) (*string, error) {
+func AskGPT(schemas, prompt string, scoldGPT bool) (*string, error) {
 	if client == nil {
 		panic("Client is nil! Did you call Init() first?")
 	}
@@ -70,6 +70,12 @@ func AskGPT(schemas, prompt string) (*string, error) {
 		Role:    openai.ChatMessageRoleUser,
 		Content: prompt,
 	})
+	if scoldGPT {
+		pastMessages = append(pastMessages, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: scoldGPTPrompt,
+		})
+	}
 	fullPrompt := append(trainingPrompts, pastMessages...)
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
@@ -85,7 +91,10 @@ func AskGPT(schemas, prompt string) (*string, error) {
 	}
 
 	log.Println(fmt.Sprintf("Response Cost: %d, $%f", resp.Usage.TotalTokens, calculateGPT3Cost(resp.Usage.TotalTokens)))
-
+	pastMessages = append(pastMessages, openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleAssistant,
+		Content: resp.Choices[0].Message.Content,
+	})
 	return &resp.Choices[0].Message.Content, nil
 }
 

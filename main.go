@@ -92,13 +92,12 @@ func questionLoop(schemas map[string]string, selectedCollections []string) {
 	chatResponse := gpt.ChatGPTResponse{}
 
 	for retries < 3 {
-		response, err := gpt.AskGPT(operations.FormatSchemas(schemas), query)
+		response, err := gpt.AskGPT(operations.FormatSchemas(schemas), query, retries > 0)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(utility.FromStringPtr(response))
 		parsedResponse, err := operations.CleanGPTResponse(utility.FromStringPtr(response))
-		if err != nil {
+		if err != nil || len(parsedResponse) == 0 || parsedResponse == nil {
 			fmt.Println("Failed to parse response from GPT-3, retrying...")
 			retries++
 		}
